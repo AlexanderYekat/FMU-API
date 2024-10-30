@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>fmu-api</AssemblyName>
     <SignAssembly>False</SignAssembly>
+    <Version>1.0.4</Version> <!-- Добавляем версию -->
+    <FileVersion>1.0.4</FileVersion> <!-- И файловую версию -->
   </PropertyGroup>
 
   <ItemGroup>

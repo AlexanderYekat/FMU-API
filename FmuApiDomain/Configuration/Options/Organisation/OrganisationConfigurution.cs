@@ -42,7 +42,8 @@
             PrintGroupData? row = PrintGroups.FirstOrDefault(x => x.Id == id);
 
             if (row == null)
-                return PrintGroups[0].XAPIKEY;
+                return "";
+                //return PrintGroups[0].XAPIKEY;
 
             return row.XAPIKEY;
         }

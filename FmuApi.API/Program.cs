@@ -52,6 +52,17 @@ bool RunHttpApiService()
 
     ConfigureLogging(builder);
 
+    var version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown";
+    logger = loggerFactory.CreateLogger<Program>();
+    
+    logger.LogInformation("\n\n");
+    logger.LogInformation("********************************************************");
+    logger.LogInformation("*                                                      *");
+    logger.LogInformation("*              ЗАПУСК FMU API v{Version}              *", version);
+    logger.LogInformation("*                                                      *");
+    logger.LogInformation("********************************************************");
+    logger.LogInformation("\n\n");
+
     builder.WebHost.UseUrls($"http://+:{Constants.Parametrs.ServerConfig.ApiIpPort}");
 
     var services = builder.Services;
@@ -110,6 +121,10 @@ bool RunHttpApiService()
 
     var app = builder.Build();
 
+    logger.LogInformation("===========================================");
+    logger.LogInformation("FMU API v{Version} успешно инициализирован", version);
+    logger.LogInformation("===========================================");
+
     app.UseSwagger();
     app.UseSwaggerUI();
 
@@ -129,9 +144,27 @@ bool RunHttpApiService()
 void ConfigureLogging(WebApplicationBuilder builder)
 {
     if (!Constants.Parametrs.Logging.IsEnabled)
+    {
+        logger.LogWarning("Логирование отключено в настройках!");
         return;
+    }
 
     string logFileName = string.Concat(Constants.DataFolderPath, "\\log\\fmu-api.log");
+    
+    // Проверяем доступность папки для логов
+    var logDir = Path.GetDirectoryName(logFileName);
+    if (!Directory.Exists(logDir))
+    {
+        try
+        {
+            Directory.CreateDirectory(logDir!);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Не удалось создать папку для логов: {Error}", ex.Message);
+            return;
+        }
+    }
 
     var logConfig = Constants.Parametrs.Logging.LogLevel.ToLower() switch
     {
@@ -145,6 +178,8 @@ void ConfigureLogging(WebApplicationBuilder builder)
     };
 
     builder.Logging.AddSerilog(logConfig);
+    
+    logger.LogInformation("Логирование настроено. Файл логов: {LogFile}", logFileName);
 }
 
 void ConfigureSwagger(IServiceCollection services)
@@ -198,12 +233,13 @@ void ConfigureCors(IServiceCollection services)
 
 bool ShowAppInfo()
 {
-    logger.LogInformation("����� ������� ����������:\r\n" +
-            "  --service ������ � ������ ������. ������� �����\r\n" +
-            "    --dataFolder ������ �������� �������� � ���� (��������������)\r\n" +
-            "  --install ������ ��������� ��� ��������� ������\r\n" +
-            "    --xapikey �������� ��������� - ���������� � ��������� ���� ��� �������� ����� (��������������)\r\n" +
-            "  --unisntall �������� ������");
+    logger.LogInformation(
+        "Доступные команды:\r\n" +
+        "  --service       Запуск приложения как HTTP API сервиса\r\n" +
+        "    --dataFolder  Путь к папке с данными (необязательный параметр)\r\n" +
+        "  --install      Установить приложение как службу Windows\r\n" +
+        "    --xapikey    API ключ для авторизации\r\n" +
+        "  --uninstall    Удалить службу Windows");
 
     return true;
 }
