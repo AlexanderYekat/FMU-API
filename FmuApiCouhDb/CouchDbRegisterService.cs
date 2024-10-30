@@ -8,7 +8,7 @@ namespace FmuApiCouhDb
     {
         public static void AddService(IServiceCollection services)
         {
-            services.AddCouchContext<CouchDbContext>(options => { });
+            //services.AddCouchContext<CouchDbContext>(options => { });
 
             services.AddScoped<FrontolDocumentHandler>();
             services.AddScoped<MarkInformationHandler>();

@@ -9,6 +9,8 @@ using FmuApiDomain.MarkInformation;
 using FmuApiDomain.TrueSignApi.MarkData;
 using FmuApiDomain.Fmu.Document;
 using FmuApiDomain.TrueSignApi.MarkData.Check;
+using Flurl.Util;
+using Flurl.Http.Content;
 
 namespace FmuApiApplication.Services.Fmu
 {
@@ -41,15 +43,33 @@ namespace FmuApiApplication.Services.Fmu
         {
             string markInDoc = document.Mark();
 
+            string currINN = document.INN();
+            string currFN = document.Shift;
+
+            _logger.LogInformation("ИНН организации {currINN}", currINN);
+            int groupID = Constants.Parametrs.OrganisationConfig.GroupIDByINN(currINN);
+            _logger.LogInformation("Код организации() {groupID}", groupID);
+
+            //Constants.Parametrs.OrganisationConfig.
+            
+            _logger.LogInformation("Проверка документа. Длина markInDoc: {Length}", markInDoc.Length);
+
             if (markInDoc.Length > 0)
+            {
+                _logger.LogInformation("Выполняется MarkCheckAsync для markInDoc: {Mark}, isReturn: {IsReturn}", 
+                    markInDoc, document.Type == FmuDocumentsTypes.ReceiptReturn);
                 // согласно документации к fmu в запросе всегда приходит 1 марка или 1 код маркировки
-                return await MarkCheckAsync(markInDoc, document.Type == FmuDocumentsTypes.ReceiptReturn);
+                return await MarkCheckAsync(markInDoc, document.Type == FmuDocumentsTypes.ReceiptReturn, groupID, currFN);
+            }
             else
+            {
+                _logger.LogInformation("Выполняется MarksCheckAsync для документа типа: {DocType}", document.Type);
                 // для совместимости
                 return await MarksCheckAsync(document);
+            }
         }
 
-        public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn)
+        public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn, int organisationId, string currFN)
         {
             FmuAnswer answer;
             CheckMarksDataTrueApi markDataFromTrueApi;
@@ -58,8 +78,11 @@ namespace FmuApiApplication.Services.Fmu
 
             MarkCode mark = MarkCode.Create(markingCode, _markStateCrud, _checkMarks);
 
-            int organisationId = await WareOrganisationId(mark.Barcode);
-            mark.SetPrintGroup(organisationId);
+            mark.FN = currFN;
+
+            //int organisationId = await WareOrganisationId(mark.Barcode);
+            //organisationId = 2;
+            mark.SetPrintGroup(organisationId);            
             _logger.LogInformation("Код организации {organisationId}", organisationId);
 
             (bool markIsOk, answer) = await mark.OfflineCheckAsync();
@@ -269,7 +292,13 @@ namespace FmuApiApplication.Services.Fmu
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("[{Date}] - Ошибка отправки данных марки {Cis} в базу данных. \r\n {err}", DateTime.Now, tApiData.Cis, ex.Message);
+                    _logger.LogError("Ошибка сохранения в CouchDB. Марка: {Mark}, Ошибка: {Error}", 
+                        tApiData.Cis, ex.ToString());
+                    
+                    if (ex.InnerException != null)
+                    {
+                        _logger.LogError("Внутренняя ошибка: {Inner}", ex.InnerException.Message);
+                    }
                 }
             }
         }
@@ -305,13 +334,24 @@ namespace FmuApiApplication.Services.Fmu
         {
             FmuAnswer chekResult = new();
 
+            _logger.LogInformation("Начало проверки документа {DocumentUid}", document.Uid);
             FrontolDocumentData frontolDocument = new()
             {
                 Id = document.Uid,
                 Document = document
             };
             
-            await _frontolDocumentCrud.AddAsync(frontolDocument);
+            try 
+            {
+                await _frontolDocumentCrud.AddAsync(frontolDocument);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Ошибка при сохранении документа в CouchDB: {Error}", ex.Message);
+                // Если база недоступна, но проверки прошли успешно - разрешаем продолжить
+                if (chekResult.Code == 0)
+                    return Result.Success(chekResult);
+            }
 
             foreach (var position in document.Positions)
             {

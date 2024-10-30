@@ -3,6 +3,7 @@
     public class CheckMarksRequestData
     {
         public List<string> Codes { get; set; } = [];
+        public string FiscalDriveNumber { get; set; } = string.Empty;
 
         public CheckMarksRequestData() { }
 

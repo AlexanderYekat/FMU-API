@@ -87,5 +87,13 @@ namespace FmuApiDomain.Fmu.Document
             return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(Positions[0].Marking_codes[0]));
 
         }
+        public string INN()
+        {
+            if (Positions.Count != 1)
+                return "";
+
+            return Positions[0].Organization.Inn;
+
+        }
     }
 }

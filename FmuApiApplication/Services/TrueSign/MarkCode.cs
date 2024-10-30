@@ -16,6 +16,7 @@ namespace FmuApiApplication.Services.TrueSign
         public string Barcode { get; } = string.Empty;
         public int PrintGroupCode { get; private set; } = 0;
         public string ErrorDescription { get; private set; } = string.Empty;
+        public string FN { get; set; } = string.Empty;
         private CheckMarksDataTrueApi TrueMarkData { get; set; } = new();
         private MarkInformation State { get; set; } = new();
         private char Gs { get; } = (char)29;
@@ -173,6 +174,8 @@ namespace FmuApiApplication.Services.TrueSign
             }
 
             CheckMarksRequestData checkMarksRequestData = new(requestCode);
+
+            checkMarksRequestData.FiscalDriveNumber = FN;
 
             var trueMarkCheckResult = await _trueApiCheck.RequestMarkState(checkMarksRequestData, PrintGroupCode);
 

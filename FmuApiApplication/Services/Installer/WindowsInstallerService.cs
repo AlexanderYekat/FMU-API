@@ -3,6 +3,7 @@ using FmuApiSettings;
 using System.Diagnostics;
 using System.Reflection;
 using System.ServiceProcess;
+using Microsoft.Extensions.Logging;
 
 namespace FmuApiApplication.Services.Installer
 {
@@ -22,6 +23,9 @@ namespace FmuApiApplication.Services.Installer
 
         public async Task<bool> InstallAsync(string[] installerArgs)
         {
+
+            _logger.LogInformation("Начало установки FMU-API");
+
             if (!Directory.Exists(_installDirectory))
                 Directory.CreateDirectory(_installDirectory);
 
@@ -79,12 +83,15 @@ namespace FmuApiApplication.Services.Installer
 
             await Constants.Parametrs.SaveAsync(Constants.Parametrs, Constants.DataFolderPath);
 
+            _logger.LogInformation("FMU-API установлен");
+
             return true;
 
         }
 
         public bool Uninstall()
         {
+            _logger.LogInformation("Начало удаления FMU-API");
             ServiceController? existingService = ServiceController.GetServices().FirstOrDefault(ser => ser.ServiceName == _serviceName);
 
             if (existingService is null)
@@ -113,6 +120,7 @@ namespace FmuApiApplication.Services.Installer
             if (File.Exists(bin))
                 File.Delete(bin);
 
+            _logger.LogInformation("FMU-API удален");
             return true;
 
         }
