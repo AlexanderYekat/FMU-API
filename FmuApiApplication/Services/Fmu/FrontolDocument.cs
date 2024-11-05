@@ -68,7 +68,7 @@ namespace FmuApiApplication.Services.Fmu
         //изменения для поиска API-KEY по ИНН //
         //public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn, int organisationId)
         public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn, int organisationId, string currFN)
-        //изменения для поиска API-KEY по ИНН //
+        //изменения для поиска API-KEY по ИНН \\
         {
             FmuAnswer answer;
             CheckMarksDataTrueApi markDataFromTrueApi;
