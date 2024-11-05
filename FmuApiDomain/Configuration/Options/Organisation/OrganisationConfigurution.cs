@@ -12,6 +12,20 @@
             PrintGroups.Add(new PrintGroupData { Id = 1 });
         }
 
+        public int GroupIDByINN(string inn)
+        {
+            if (PrintGroups.Count == 0)
+                return 0;
+
+            PrintGroupData? row = PrintGroups.FirstOrDefault(x => x.INN == inn);
+
+            if (row == null)
+                //return PrintGroups[0].XAPIKEY;
+                return -1;
+
+            return row.Id;
+        }
+
         public string XapiKey()
         {
             if (PrintGroups.Count == 0)
@@ -24,6 +38,12 @@
         {
             if (PrintGroups.Count == 0)
                 return "";
+
+            //изменения для поиска API-KEY по ИНН //
+            if (id == -1) {
+                return "";
+            }
+            //изменения для поиска API-KEY по ИНН \\
 
             PrintGroupData? row = PrintGroups.FirstOrDefault(x => x.Id == id);
 

@@ -87,5 +87,15 @@ namespace FmuApiDomain.Fmu.Document
             return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(Positions[0].Marking_codes[0]));
 
         }
+        //изменения для поиска API-KEY по ИНН //
+        public string INN()
+        {
+            if (Positions.Count != 1)
+                return "";
+
+            return Positions[0].Organization.Inn;
+
+        }
+        //изменения для поиска API-KEY по ИНН \\
     }
 }

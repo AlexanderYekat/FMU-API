@@ -3,7 +3,9 @@
     public class CheckMarksRequestData
     {
         public List<string> Codes { get; set; } = [];
-
+        //изменения отправки номера ФН в запросе //
+        public string FiscalDriveNumber { get; set; } = string.Empty;
+        //изменения отправки номера ФН в запросе \\
         public CheckMarksRequestData() { }
 
         public CheckMarksRequestData(string mark)

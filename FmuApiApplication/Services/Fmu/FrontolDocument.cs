@@ -41,15 +41,34 @@ namespace FmuApiApplication.Services.Fmu
         {
             string markInDoc = document.Mark();
 
+            //изменения для поиска API-KEY по ИНН //
+            string currINN = document.INN();
+            string currFN = document.Shift;
+
+            _logger.LogInformation("ИНН организации {currINN}", currINN);
+            int groupID = 0; //по умолчанию берём первый попавшийся
+            if (currINN == null || currINN.Length == 0) {
+                _logger.LogInformation("ИНН организации не задан");
+            } else {
+                groupID = Constants.Parametrs.OrganisationConfig.GroupIDByINN(currINN);
+                if (groupID == -1) {
+                    _logger.LogInformation("ИНН организации {currINN} не найден в конфиге", currINN);
+                }
+            }
+            //изменения для поиска API-KEY по ИНН \\
+
             if (markInDoc.Length > 0)
                 // согласно документации к fmu в запросе всегда приходит 1 марка или 1 код маркировки
-                return await MarkCheckAsync(markInDoc, document.Type == FmuDocumentsTypes.ReceiptReturn);
+                return await MarkCheckAsync(markInDoc, document.Type == FmuDocumentsTypes.ReceiptReturn, groupID, currFN);
             else
                 // для совместимости
                 return await MarksCheckAsync(document);
         }
 
-        public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn)
+        //изменения для поиска API-KEY по ИНН //
+        //public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn, int organisationId)
+        public async Task<Result<FmuAnswer>> MarkCheckAsync(string markingCode, bool isReturn, int organisationId, string currFN)
+        //изменения для поиска API-KEY по ИНН //
         {
             FmuAnswer answer;
             CheckMarksDataTrueApi markDataFromTrueApi;
@@ -58,7 +77,12 @@ namespace FmuApiApplication.Services.Fmu
 
             MarkCode mark = MarkCode.Create(markingCode, _markStateCrud, _checkMarks);
 
-            int organisationId = await WareOrganisationId(mark.Barcode);
+            //изменения для поиска API-KEY по ИНН //
+            mark.FN = currFN;
+            if (organisationId != -1) {
+                organisationId = await WareOrganisationId(mark.Barcode);
+            }
+            //изменения для поиска API-KEY по ИНН \\
             mark.SetPrintGroup(organisationId);
             _logger.LogInformation("Код организации {organisationId}", organisationId);
 

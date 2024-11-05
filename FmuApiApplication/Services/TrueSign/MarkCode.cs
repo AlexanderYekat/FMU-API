@@ -16,6 +16,9 @@ namespace FmuApiApplication.Services.TrueSign
         public string Barcode { get; } = string.Empty;
         public int PrintGroupCode { get; private set; } = 0;
         public string ErrorDescription { get; private set; } = string.Empty;
+        //изменения для поиска API-KEY по ИНН //
+        public string FN { get; set; } = string.Empty;
+        //изменения для поиска API-KEY по ИНН \\
         private CheckMarksDataTrueApi TrueMarkData { get; set; } = new();
         private MarkInformation State { get; set; } = new();
         private char Gs { get; } = (char)29;
@@ -173,6 +176,9 @@ namespace FmuApiApplication.Services.TrueSign
             }
 
             CheckMarksRequestData checkMarksRequestData = new(requestCode);
+            //изменения отправки номера ФН в запросе //
+            checkMarksRequestData.FiscalDriveNumber = FN;
+            //изменения отправки номера ФН в запросе \\
 
             var trueMarkCheckResult = await _trueApiCheck.RequestMarkState(checkMarksRequestData, PrintGroupCode);
 
